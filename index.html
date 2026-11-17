@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Dashboard</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f8;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        #title {
+            text-align: center;
+            color: #273c75;
+            margin-bottom: 30px;
+            font-size: 40px;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        #newTask, #categoryFilter {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 16px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        #addBtn {
+            padding: 15px 25px;
+            background: #273c75;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #addBtn:hover {
+            background: #192a56;
+        }
+
+        h2 {
+            margin: 30px 0 18px;
+            color: #333;
+        }
+
+        #taskList {
+            list-style: none;
+        }
+
+        #taskList li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f1f2f6;
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .task-checkbox {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 18px;
+        }
+
+        .task-category {
+            background: #dcdde1;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .status-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #dff9fb;
+            border-radius: 8px;
+            text-align: center;
+            color: #273c75;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            #title {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Heading -->
+        <h1 id="title">Task Dashboard</h1>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+
+            <input
+                type="text"
+                id="newTask"
+                placeholder="Enter a new task"
+            >
+
+            <button id="addBtn">Add Task</button>
+
+            <select id="categoryFilter">
+                <option value="All">All Categories</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Hobby">Hobby</option>
+            </select>
+
+        </div>
+
+        <!-- Task List -->
+        <h2>My Tasks</h2>
+
+        <ul id="taskList"></ul>
+
+        <!-- Status Panel -->
+        <div class="status-panel">
+            Total Tasks: 0 | Completed Tasks: 0
+        </div>
+
+    </div>
+
+    <script>
+
+        // 1. DOM Selection using getElementById()
+
+        let taskInput = document.getElementById("newTask");
+        let addButton = document.getElementById("addBtn");
+        let taskList = document.getElementById("taskList");
+        let categoryFilter = document.getElementById("categoryFilter");
+
+
+        // 2. Add Task Functionality
+
+        function addTask(taskName, category) {
+
+            if (taskName.trim() === "") {
+                alert("Please enter a task!");
+                return;
+            }
+
+            if (category === "All") {
+                alert("Please select a task category!");
+                return;
+            }
+
+            // Create list item
+            let li = document.createElement("li");
+
+            // Create checkbox
+            let checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "task-checkbox";
+
+            // Create task text
+            let taskText = document.createElement("span");
+            taskText.className = "task-text";
+            taskText.textContent = taskName;
+
+            // Create category
+            let taskCategory = document.createElement("span");
+            taskCategory.className = "task-category";
+            taskCategory.textContent = category;
+
+            // Append elements to li
+            li.appendChild(checkbox);
+            li.appendChild(taskText);
+            li.appendChild(taskCategory);
+
+            // Append li to task list
+            taskList.appendChild(li);
+
+            // Clear input
+            taskInput.value = "";
+
+            // Attach checkbox event
+            attachCheckboxEvents();
+
+            // Apply current category filter
+            applyCategoryFilter();
+
+            // Update status
+            updateStatus();
+        }
+
+
+        // Add button click event
+
+        addButton.addEventListener("click", function() {
+
+            let taskName = taskInput.value;
+            let category = categoryFilter.value;
+
+            addTask(taskName, category);
+
+        });
+
+
+        // Allow Enter key to add tasks
+
+        taskInput.addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+                addButton.click();
+            }
+
+        });
+
+
+        // 3. Toggle Completion using getElementsByClassName()
+
+        function attachCheckboxEvents() {
+
+            let checkboxes =
+                document.getElementsByClassName("task-checkbox");
+
+            for (let i = 0; i < checkboxes.length; i++) {
+
+                if (checkboxes[i].dataset.listenerAttached === "true") {
+                    continue;
+                }
+
+                checkboxes[i].addEventListener("change", function() {
+
+                    let parent = this.parentElement;
+
+                    if (this.checked) {
+                        parent.classList.add("completed");
+                    } else {
+                        parent.classList.remove("completed");
+                    }
+
+                    updateStatus();
+
+                });
+
+                checkboxes[i].dataset.listenerAttached = "true";
+            }
+        }
+
+
+        // 4. Category Filtering using getElementsByTagName()
+
+        function applyCategoryFilter() {
+
+            let selectedCategory = categoryFilter.value;
+
+            let tasks = taskList.getElementsByTagName("li");
+
+            for (let i = 0; i < tasks.length; i++) {
+
+                let category = tasks[i]
+                    .getElementsByClassName("task-category")[0]
+                    .textContent;
+
+                if (
+                    selectedCategory === "All" ||
+                    category === selectedCategory
+                ) {
+                    tasks[i].style.display = "flex";
+                } else {
+                    tasks[i].style.display = "none";
+                }
+            }
+        }
+
+        categoryFilter.addEventListener("change", function() {
+
+            applyCategoryFilter();
+            updateStatus();
+
+        });
+
+
+        // 5. Update Status Panel using getElementsByClassName()
+
+        function updateStatus() {
+
+            let tasks = taskList.getElementsByTagName("li");
+
+            let totalTasks = tasks.length;
+            let completedTasks = 0;
+
+            for (let i = 0; i < tasks.length; i++) {
+
+                let checkbox = tasks[i]
+                    .getElementsByClassName("task-checkbox")[0];
+
+                if (checkbox.checked) {
+                    completedTasks++;
+                }
+            }
+
+            let statusPanel =
+                document.getElementsByClassName("status-panel");
+
+            statusPanel[0].innerText =
+                "Total Tasks: " + totalTasks +
+                " | Completed Tasks: " + completedTasks;
+        }
+
+
+        // 6. Initial Data Load
+
+        addTask("Complete project documentation", "Work");
+        addTask("Buy groceries", "Personal");
+        addTask("Practice JavaScript", "Hobby");
+
+    </script>
+
+</body>
+</html>
